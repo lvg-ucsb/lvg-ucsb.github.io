@@ -1,0 +1,33 @@
+name: Migrate LVG website
+on:
+  push:
+    paths:
+      - '.github/workflows/migrate-site.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out destination
+        uses: actions/checkout@v4
+      - name: Download original public repository
+        run: git clone --depth 1 --branch master https://github.com/KNylund-Gibson/lvg_website.git /tmp/original-lvg
+      - name: Copy full published site and photographs
+        run: |
+          cp -a /tmp/original-lvg/docs/. .
+          touch .nojekyll
+          test -f index.html
+          test -f people.html
+          test -f research.html
+          test -f archive-photos/README.md
+      - name: Commit imported files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Migrate full LVG website and photographs"
+            git push
+          fi
